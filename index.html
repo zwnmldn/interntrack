@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="IMS566 Internship Tracker Application Prototype for UiTM Students">
+    <meta name="author" content="UiTM Student - IMS566 Project">
+    <meta name="keywords" content="IMS566, UiTM, Internship Tracker, Web Application, Advanced Web Design">
+    <title>InternTrack</title>
+    <!-- favicon -->
+    <link rel="shortcut icon" type="image/png" href="logo student.png">
+
+    <!-- fonts + bootstrap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- font awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- my own styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- navbar (hidden until user logs in) -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top d-none" id="appNavbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <!-- logo -->
+                <svg class="d-inline-block rounded-2" width="32" height="32" viewBox="0 0 100 100">
+                    <rect width="100" height="100" rx="20" fill="#38bdf8"/>
+                    <path d="M50 22 L85 40 L50 58 L15 40 Z" fill="#1e3a8a"/>
+                    <path d="M30 48 L30 68 C30 78 70 78 70 68 L70 48" stroke="#ffffff" stroke-width="7" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="fw-bold">InternTrack</span>
+            </a>
+
+            <div class="d-flex align-items-center gap-2 order-lg-3 ms-auto ms-lg-3">
+                <!-- dark mode toggle -->
+                <button class="theme-toggle-btn small" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    <span id="themeLabel" class="d-none d-sm-inline small">Dark</span>
+                </button>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+
+            <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="switchView(event, 'dashboard')"><i class="fa-solid fa-chart-pie me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="switchView(event, 'applications')"><i class="fa-solid fa-briefcase me-1"></i> Applications</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="switchView(event, 'interviews')"><i class="fa-solid fa-calendar-check me-1"></i> Interviews & Contacts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="switchView(event, 'analytics')"><i class="fa-solid fa-chart-line me-1"></i> Visual Analytics</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-light text-end d-none d-xl-block">
+                        <div class="fw-bold small" id="navUserName">Ahmad Student</div>
+                        <div class="text-white-50 extra-small" style="font-size: 0.75rem;" id="navStudentInfo">UiTM Student (202640001)</div>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="handleLogout()">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- main content -->
+    <div class="container my-4 main-container">
+
+        <!-- login / register -->
+        <section id="authSection" class="d-flex flex-column align-items-center justify-content-center py-5">
+            <div class="card auth-card p-4 border-0">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 mb-2 rounded-circle bg-primary text-white shadow">
+                        <svg width="48" height="48" viewBox="0 0 100 100">
+                            <path d="M50 15 L90 38 L50 61 L10 38 Z" fill="#ffffff"/>
+                            <path d="M28 48 L28 72 C28 84 72 84 72 72 L72 48" stroke="#38bdf8" stroke-width="8" fill="none" stroke-linecap="round"/>
+                            <circle cx="85" cy="55" r="5" fill="#38bdf8"/>
+                        </svg>
+                    </div>
+                    <h3 class="fw-bold">UiTM Internship Tracker</h3>
+                    <p class="text-muted small">IMS566 Web Application Prototype</p>
+                </div>
+
+                <!-- login/register tabs -->
+                <ul class="nav nav-pills nav-justified mb-3 gap-2" id="authTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill fw-bold text-dark bg-blue border" id="login-tab" data-bs-toggle="tab" data-bs-target="#loginPane" type="button">Login</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill fw-bold text-dark bg-blue border" id="register-tab" data-bs-toggle="tab" data-bs-target="#registerPane" type="button">Register</button>
+                    </li>
+                </ul>
+
+                <!-- error message box -->
+                <div id="authAlert" class="alert alert-danger d-none py-2 small" role="alert"></div>
+
+                <div class="tab-content" id="authTabContent">
+                    <!-- login form -->
+                    <div class="tab-pane fade show active" id="loginPane">
+                        <form onsubmit="handleLogin(event)">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Student Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                    <input type="email" id="loginEmail" class="form-control" value="student@uitm.edu.my" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" id="loginPassword" class="form-control" value="password123" required>
+                                </div>
+                            </div>
+                            <div class="p-2 mb-3 bg-light rounded text-muted small border">
+                                <i class="fa-solid fa-circle-info me-1 text-primary"></i> <strong>Demo Credentials:</strong><br>
+                                Email: <code>student@uitm.edu.my</code><br>
+                                Password: <code>password123</code>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-bold">Sign In</button>
+                        </form>
+                    </div>
+
+                    <!-- register form (just a simulation, nothing is really saved) -->
+                    <div class="tab-pane fade" id="registerPane">
+                        <form onsubmit="handleRegister(event)">
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Full Name</label>
+                                <input type="text" id="regName" class="form-control" placeholder="Ahmad Razak" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Student ID</label>
+                                <input type="text" id="regStudentId" class="form-control" placeholder="2026123456" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Email</label>
+                                <input type="email" id="regEmail" class="form-control" placeholder="student@uitm.edu.my" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Password</label>
+                                <input type="password" id="regPass" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 py-2 rounded-3 fw-bold">Create Account</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- dashboard -->
+        <section id="dashboardSection" class="view-section d-none">
+            <!-- page header -->
+            <div class="d-flex justify-content-between align-items-center section-header flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Internship Dashboard</h3>
+                    <p class="text-muted small mb-0">Overview of your industrial training placement status</p>
+                </div>
+                <button class="btn btn-primary rounded-pill shadow-sm" onclick="openAppModal()">
+                    <i class="fa-solid fa-plus me-1"></i> Add New Application
+                </button>
+            </div>
+
+            <!-- stat cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-primary">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small">Total Applied</div>
+                                <div class="fs-3 fw-bold" id="statTotal">0</div>
+                            </div>
+                            <div class="bg-primary text-white p-3 rounded-circle shadow-sm"><i class="fa-solid fa-paper-plane fs-4"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-warning">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small">In Review / Interview</div>
+                                <div class="fs-3 fw-bold" id="statReview">0</div>
+                            </div>
+                            <div class="bg-warning text-white p-3 rounded-circle shadow-sm"><i class="fa-solid fa-clock fs-4"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-success">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small">Offers Received</div>
+                                <div class="fs-3 fw-bold" id="statOffers">0</div>
+                            </div>
+                            <div class="bg-success text-white p-3 rounded-circle shadow-sm"><i class="fa-solid fa-circle-check fs-4"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="card stat-card p-3 border-start border-4 border-danger">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small">Rejected / Closed</div>
+                                <div class="fs-3 fw-bold" id="statRejected">0</div>
+                            </div>
+                            <div class="bg-danger text-white p-3 rounded-circle shadow-sm"><i class="fa-solid fa-circle-xmark fs-4"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- row 1: pie chart + recent apps -->
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-lg-7">
+                    <div class="card stat-card p-3 h-100">
+                        <h5 class="fw-bold card-title mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>1. Application Status Ratio</h5>
+                        <div style="position: relative; height:260px;">
+                            <canvas id="dashboardPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-5">
+                    <div class="card stat-card p-3 h-100">
+                        <h5 class="fw-bold card-title mb-3"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Recent Applications</h5>
+                        <div class="list-group list-group-flush" id="recentAppList">
+                            <!-- filled in by script.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- row 2: two more charts -->
+            <div class="row g-4">
+                <!-- stipend bar chart -->
+                <div class="col-12 col-lg-6">
+                    <div class="card stat-card p-3 h-100">
+                        <h5 class="fw-bold card-title mb-3"><i class="fa-solid fa-money-bill-wave me-2 text-success"></i>2. Stipend Offered (RM) by Company</h5>
+                        <div style="position: relative; height:260px;">
+                            <canvas id="dashboardStipendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <!-- submission line chart -->
+                <div class="col-12 col-lg-6">
+                    <div class="card stat-card p-3 h-100">
+                        <h5 class="fw-bold card-title mb-3"><i class="fa-solid fa-chart-line me-2 text-info"></i>3. Application Submission Velocity</h5>
+                        <div style="position: relative; height:260px;">
+                            <canvas id="dashboardVelocityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- applications page (with pagination) -->
+        <section id="applicationsSection" class="view-section d-none">
+            <!-- page header -->
+            <div class="d-flex justify-content-between align-items-center section-header flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Applications Management</h3>
+                    <p class="text-muted small mb-0">Track and manage your submitted internship placements</p>
+                </div>
+                <button class="btn btn-primary rounded-pill" onclick="openAppModal()">
+                    <i class="fa-solid fa-plus me-1"></i> Add New Application
+                </button>
+            </div>
+
+            <div class="card stat-card p-3 mb-4">
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" id="searchAppInput" class="form-control" placeholder="Search by company or position..." oninput="onSearchOrFilterChange()">
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <select id="filterStatusSelect" class="form-select" onchange="onSearchOrFilterChange()">
+                            <option value="ALL">All Statuses</option>
+                            <option value="Applied">Applied</option>
+                            <option value="Interview Scheduled">Interview Scheduled</option>
+                            <option value="Offer Received">Offer Received</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Company</th>
+                                <th>Position</th>
+                                <th>Location</th>
+                                <th>Applied Date</th>
+                                <th>Stipend (RM)</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appTableBody">
+                            <!-- rows added by script.js -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
+                    <div class="text-muted small" id="paginationInfo">
+                        Showing 0 to 0 of 0 applications
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="prevPageBtn" onclick="changePage(-1)">
+                            <i class="fa-solid fa-chevron-left me-1"></i> Previous
+                        </button>
+                        <span class="badge bg-secondary px-3 py-2" id="pageIndicator">Page 1 of 1</span>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="nextPageBtn" onclick="changePage(1)">
+                            Next <i class="fa-solid fa-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- interviews + contacts page -->
+        <section id="interviewsSection" class="view-section d-none">
+            <!-- page header -->
+            <div class="d-flex justify-content-between align-items-center section-header flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Interviews & Company Contacts</h3>
+                    <p class="text-muted small mb-0">Schedule of upcoming interviews and recruiter contact repository</p>
+                </div>
+                <button class="btn btn-primary rounded-pill" onclick="openInterviewModal()">
+                    <i class="fa-solid fa-calendar-plus me-1"></i> Schedule Interview
+                </button>
+            </div>
+
+            <div class="row g-3" id="interviewsGrid">
+                <!-- interview cards added by script.js -->
+            </div>
+        </section>
+
+        <!-- analytics page -->
+        <section id="analyticsSection" class="view-section d-none">
+            <!-- page header -->
+            <div class="section-header">
+                <h3 class="fw-bold mb-1">Visual Analytics</h3>
+                <p class="text-muted small mb-0">In-depth graphical insights into your internship application journey</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12 col-md-5">
+                    <div class="card stat-card p-3 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Status Distribution</h5>
+                        <div style="position: relative; height: 320px;">
+                            <canvas id="analyticsDoughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <!-- mixed chart: monthly bars + cumulative line -->
+                <div class="col-12 col-md-7">
+                    <div class="card stat-card p-3 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-column text-success me-2"></i>Monthly Applications & Cumulative Growth (Mixed Chart)</h5>
+                        <div style="position: relative; height: 320px;">
+                            <canvas id="analyticsMixedChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- modals -->
+
+    <!-- add / edit application -->
+    <div class="modal fade" id="appModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="appForm" onsubmit="saveApplication(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="appModalTitle">Add Application</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="appId">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Company Name</label>
+                            <input type="text" id="appCompany" class="form-control" required placeholder="e.g. Petronas / Maybank">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Position Title</label>
+                            <input type="text" id="appPosition" class="form-control" required placeholder="e.g. Software Engineer Intern">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Location</label>
+                            <input type="text" id="appLocation" class="form-control" required placeholder="e.g. Kuala Lumpur">
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Application Date</label>
+                                <input type="date" id="appDate" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Monthly Stipend (RM)</label>
+                                <input type="number" id="appStipend" class="form-control" placeholder="1000">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Status</label>
+                            <select id="appStatus" class="form-select">
+                                <option value="Applied">Applied</option>
+                                <option value="Interview Scheduled">Interview Scheduled</option>
+                                <option value="Offer Received">Offer Received</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Details</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- add / edit interview -->
+    <div class="modal fade" id="interviewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="interviewForm" onsubmit="saveInterview(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="interviewModalTitle">Schedule / Add Contact</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="intId">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Company</label>
+                            <input type="text" id="intCompany" class="form-control" required placeholder="e.g. Telekom Malaysia">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Interviewer / HR Contact</label>
+                            <input type="text" id="intContact" class="form-control" required placeholder="e.g. Ms. Sarah (HR)">
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Date & Time</label>
+                                <input type="datetime-local" id="intDateTime" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Mode</label>
+                                <select id="intMode" class="form-select">
+                                    <option value="Online (Google Meet)">Online (Google Meet)</option>
+                                    <option value="Online (MS Teams)">Online (MS Teams)</option>
+                                    <option value="Physical / On-site">Physical / On-site</option>
+                                    <option value="Phone Call">Phone Call</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Notes / Preparation</label>
+                            <textarea id="intNotes" class="form-control" rows="2" placeholder="e.g. Prepare portfolio and review system design concepts."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Interview</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- footer -->
+    <footer class="mt-auto py-3 border-top border-secondary">
+        <div class="container text-center text-md-between d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div>
+                <span class="fw-bold text-white">IMS566 Web Application Prototype</span> &copy; 2026 UiTM. All rights reserved.
+            </div>
+            <div class="small">
+                <span>Course: <strong>IMS566 - Advanced Web Design Development</strong></span> |
+                <span>Theme: <strong>Internship Tracker</strong></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- bootstrap js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- main script -->
+    <script src="script.js"></script>
+</body>
+</html>
